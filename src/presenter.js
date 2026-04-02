@@ -5,6 +5,7 @@ import PointView from "./view/Point";
 import CreateFormView from "./view/CreateForm";
 import { mockPoints } from "./mock/point";
 import { render, RenderPosition, replace } from "./framework/render";
+import PointPresenter from "./presenters/Point";
 
 export default function present() {
   const filters = new FiltersView();
@@ -17,29 +18,6 @@ export default function present() {
     RenderPosition.BEFOREEND
   );
 
-  const onEditPoint = (e, point) => {
-    const close = (editForm) => {
-      replace(point, editForm);
-      document.removeEventListener("keyup", onEsc);
-    };
-    const onEsc = (e) => {
-      if (e.key === "Escape") {
-        close(editForm);
-      }
-    };
-    const editForm = new EditFormView(
-      point.point,
-      (e) => {
-        e.preventDefault();
-        close(editForm);
-      },
-      () => close(editForm)
-    );
-    document.addEventListener("keyup", onEsc);
-
-    replace(editForm, point);
-  };
-
   render(sorting, contentContainer, RenderPosition.BEFOREEND);
   // render(createForm, contentContainer, RenderPosition.BEFOREEND);
   // render(
@@ -47,19 +25,8 @@ export default function present() {
   //   contentContainer,
   //   RenderPosition.BEFOREEND
   // );
-  render(
-    new PointView(mockPoints[0], onEditPoint),
-    contentContainer,
-    RenderPosition.BEFOREEND
-  );
-  render(
-    new PointView(mockPoints[0], onEditPoint),
-    contentContainer,
-    RenderPosition.BEFOREEND
-  );
-  render(
-    new PointView(mockPoints[0], onEditPoint),
-    contentContainer,
-    RenderPosition.BEFOREEND
-  );
+  
+  new PointPresenter(mockPoints[0]).present()
+  new PointPresenter(mockPoints[0]).present()
+  new PointPresenter(mockPoints[0]).present()
 }
