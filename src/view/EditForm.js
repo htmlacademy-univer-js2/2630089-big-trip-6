@@ -1,13 +1,41 @@
-import { createElement } from "../framework/render";
-import AbstractView from "../framework/view/abstract-view";
+import AbstractStatefulView from "../framework/view/abstract-stateful-view";
+import { mockDestinations } from "../mock/point";
 import { capitalizeFirstLetter } from "../utils";
 
-export default class EditFormView extends AbstractView {
+export default class EditFormView extends AbstractStatefulView {
   constructor(point, onSubmit, onReject = onSubmit) {
-    super();
-    this.point = point;
+    super(point);
     this.onSubmit = onSubmit;
     this.onReject = onReject;
+  }
+
+  _restoreHandlers() {
+    this.element.addEventListener("submit", (e) =>
+      this.onSubmit(e, this._state)
+    );
+    this.element
+      .querySelector(".event__rollup-btn")
+      .addEventListener("click", this.onReject);
+
+    this.element
+      .querySelector(".event__reset-btn")
+      .addEventListener("click", this.onReject);
+
+    this.element
+      .querySelector(".event__type-group")
+      .addEventListener("change", (e) => {
+        this.updateElement({
+          type: e.target.value,
+        });
+      });
+
+    this.element
+      .querySelector(".event__input--destination")
+      .addEventListener("blur", (e) => {
+        this.updateElement({
+          destination: e.target.value,
+        });
+      });
   }
 
   _formatDate(d) {
@@ -21,7 +49,12 @@ export default class EditFormView extends AbstractView {
     return `${day}/${month}/${year} ${hours}:${minutes}`;
   }
 
+  _findDestination(name) {
+    return mockDestinations.find((dest) => dest.name === name);
+  }
+
   get template() {
+    const destination = this._findDestination(this._state.destination);
     return `
       <form class="event event--edit" action="#" method="post">
         <header class="event__header">
@@ -29,7 +62,7 @@ export default class EditFormView extends AbstractView {
             <label class="event__type  event__type-btn" for="event-type-toggle-1">
               <span class="visually-hidden">Choose event type</span>
               <img class="event__type-icon" width="17" height="17" src="img/icons/${
-                this.point.type
+                this._state.type
               }.png" alt="Event type icon">
             </label>
             <input class="event__type-toggle  visually-hidden" id="event-type-toggle-1" type="checkbox">
@@ -88,23 +121,27 @@ export default class EditFormView extends AbstractView {
 
           <div class="event__field-group  event__field-group--destination">
             <label class="event__label  event__type-output" for="event-destination-1">
-              ${capitalizeFirstLetter(this.point.type)}
+              ${capitalizeFirstLetter(this._state.type)}
             </label>
-            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="Chamonix" list="destination-list-1">
+            <input class="event__input  event__input--destination" id="event-destination-1" type="text" name="event-destination" value="${
+              this._state.destination
+            }" list="destination-list-1">
             <datalist id="destination-list-1">
-              <option value="${this.point.destination.name}"></option>
+            ${mockDestinations
+              .map((dest) => `<option value="${dest.name}"></option>`)
+              .join("")}
             </datalist>
           </div>
 
           <div class="event__field-group  event__field-group--time">
             <label class="visually-hidden" for="event-start-time-1">From</label>
             <input class="event__input  event__input--time" id="event-start-time-1" type="text" name="event-start-time" value="${this._formatDate(
-              this.point.dateFrom
+              this._state.dateFrom
             )}">
             &mdash;
             <label class="visually-hidden" for="event-end-time-1">To</label>
             <input class="event__input  event__input--time" id="event-end-time-1" type="text" name="event-end-time" value="${this._formatDate(
-              this.point.dateTo
+              this._state.dateTo
             )}">
           </div>
 
@@ -114,7 +151,7 @@ export default class EditFormView extends AbstractView {
               &euro;
             </label>
             <input class="event__input  event__input--price" id="event-price-1" type="text" name="event-price" value="${
-              this.point.basePrice
+              this._state.basePrice
             }">
           </div>
 
@@ -129,7 +166,7 @@ export default class EditFormView extends AbstractView {
             <h3 class="event__section-title  event__section-title--offers">Offers</h3>
 
             <div class="event__available-offers">
-              ${this.point.offers.map(
+              ${this._state.offers.map(
                 (offer) => `
                 <div class="event__offer-selector">
                   <input class="event__offer-checkbox  visually-hidden" id="${offer.id}" type="checkbox" name="event-offer-luggage" checked>
@@ -144,24 +181,21 @@ export default class EditFormView extends AbstractView {
             </div>
           </section>
           ${
-            !this.point.destination
+            !destination
               ? ""
               : `
             <section class="event__section  event__section--destination">
               <h3 class="event__section-title  event__section-title--destination">Destination</h3>
               <p class="event__destination-description">${
-                this.point.destination.description
+                destination.description
               }</p>
               ${
-                !(
-                  this.point.destination &&
-                  this.point.destination.pictures?.length > 0
-                )
+                !(destination.pictures?.length > 0)
                   ? ""
                   : `
                 <div class="event__photos-container">
                   <div class="event__photos-tape">
-                    ${this.point.destination.pictures.map(
+                    ${destination.pictures.map(
                       (pic) =>
                         `<img class="event__photo" src="${pic.src}" alt="${pic.description}">`
                     )}
@@ -176,18 +210,5 @@ export default class EditFormView extends AbstractView {
         </section>
       </form>
     `;
-  }
-
-  get element() {
-    if (this._element) {
-      return this._element;
-    }
-    const elem = createElement(this.template);
-    elem.addEventListener("submit", (e) => this.onSubmit(e, this.point));
-    elem
-      .querySelector(".event__rollup-btn")
-      .addEventListener("click", this.onReject);
-    this._element = elem;
-    return elem;
   }
 }
