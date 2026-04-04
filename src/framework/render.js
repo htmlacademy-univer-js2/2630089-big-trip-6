@@ -50,6 +50,7 @@ function replace(newComponent, oldComponent) {
 
   const newElement = newComponent.element;
   const oldElement = oldComponent.element;
+
   const parent = oldElement.parentElement;
   
   if (parent === null) {
