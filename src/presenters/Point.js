@@ -8,7 +8,7 @@ export default class PointPresenter {
       throw new Error("No point");
     }
     this.id = point.id;
-    this.onOpenEditForm = onOpenEditForm;
+    this._onOpenEditForm = onOpenEditForm;
     this._editForm = null;
     this._onKeyUp = null;
     this._pointView = null;
@@ -20,7 +20,7 @@ export default class PointPresenter {
   };
 
   openEditForm = () => {
-    this.onOpenEditForm();
+    this._onOpenEditForm();
     this._editForm = new EditFormView(
       this.point,
       (e, point) => {

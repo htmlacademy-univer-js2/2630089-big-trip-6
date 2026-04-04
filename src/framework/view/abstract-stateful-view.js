@@ -1,11 +1,15 @@
-import AbstractView from './abstract-view.js';
+import AbstractView from "./abstract-view.js";
 
 /**
  * Абстрактный класс представления с состоянием
  */
 export default class AbstractStatefulView extends AbstractView {
   /** @type {Object} Объект состояния */
-  _state = {};
+  constructor(initState) {
+    super();
+    this._setState(initState);
+    this._wasInited = false;
+  }
 
   /**
    * Метод для обновления состояния и перерисовки элемента
@@ -26,7 +30,7 @@ export default class AbstractStatefulView extends AbstractView {
    * @abstract
    */
   _restoreHandlers() {
-    throw new Error('Abstract method not implemented: restoreHandlers');
+    throw new Error("Abstract method not implemented: restoreHandlers");
   }
 
   /**
@@ -34,7 +38,7 @@ export default class AbstractStatefulView extends AbstractView {
    * @param {Object} update Объект с обновлённой частью состояния
    */
   _setState(update) {
-    this._state = structuredClone({...this._state, ...update});
+    this._state = structuredClone({ ...this._state, ...update });
   }
 
   /** Метод для перерисовки элемента */
@@ -48,5 +52,14 @@ export default class AbstractStatefulView extends AbstractView {
     parent.replaceChild(newElement, prevElement);
 
     this._restoreHandlers();
+  }
+
+  get element() {
+    const elem = super.element;
+    if (!this._wasInited) {
+      this._wasInited = true;
+      this._restoreHandlers();
+    }
+    return elem;
   }
 }
